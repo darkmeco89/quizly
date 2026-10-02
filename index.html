@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViralQuiz INFINITE | Multiverse Edition</title>
+    <title>Quizly | Challenge Your Mind</title>
+    
+    <!-- CODICE DI VERIFICA ADSENSE (Inserito correttamente per la verifica) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-225663312903904" crossorigin="anonymous"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        /* DESIGN PREMIUM (Mantenuto dal God Mode v4) */
         :root {
             --accent: #8A2BE2; --accent-glow: rgba(138, 43, 226, 0.5);
             --secondary: #FF007A; --bg-dark: #080810;
@@ -28,34 +31,61 @@
         .blob-2 { width: 300px; height: 300px; background: var(--secondary); bottom: -5%; right: -5%; animation-delay: -5s; }
         .blob-3 { width: 250px; height: 250px; background: #00D1FF; top: 40%; left: 30%; animation-delay: -10s; }
         @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(100px, 100px) scale(1.2); } }
+        
         header { text-align: center; margin-bottom: 2rem; z-index: 10; animation: fadeInDown 0.8s ease; }
         header h1 { font-size: 3.5rem; font-weight: 800; margin: 0; background: linear-gradient(to bottom, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
+
         .container { width: 100%; max-width: 500px; padding: 20px; z-index: 10; }
-        .quiz-card, .lock-card, .result-card {
+        .card {
             background: var(--card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 35px; padding: 2.5rem;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6); text-align: center; transition: var(--transition); position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6); text-align: center; transition: var(--transition);
+            display: none; flex-direction: column; align-items: center;
         }
-        .slide-out { transform: translateX(-100px); opacity: 0; }
-        .slide-in { transform: translateX(0); opacity: 1; }
+
+        /* LANDING PAGE */
+        .input-group { width: 100%; margin: 2rem 0; }
+        .nickname-input {
+            width: 100%; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+            padding: 15px 20px; border-radius: 20px; color: white; font-size: 1.1rem;
+            font-family: inherit; text-align: center; transition: var(--transition);
+        }
+        .nickname-input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+        .rules { text-align: left; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-dim); }
+        .rules ul { padding-left: 20px; margin: 10px 0; }
+        .rules li { margin-bottom: 8px; }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent), var(--secondary));
+            color: white; border: none; padding: 15px 40px; border-radius: 20px;
+            font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .btn-primary:hover { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 20px var(--accent-glow); }
+
+        /* QUIZ UI */
         .progress-wrapper { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 2.5rem; overflow: hidden; }
-        .progress-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--accent), var(--secondary)); box-shadow: 0 0 15px var(--accent); transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
-        .question { font-size: 1.6rem; font-weight: 600; margin-bottom: 2rem; line-height: 1.3; min-height: 90px; }
-        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--accent), var(--secondary)); transition: width 0.6s ease; }
+        .question { font-size: 1.6rem; font-weight: 600; margin-bottom: 2rem; min-height: 90px; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; }
         .option-btn {
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 18px 22px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem;
-            font-family: inherit; cursor: pointer; transition: var(--transition); text-align: left;
+            padding: 18px 22px; border-radius: 20px; color: var(--text-main); cursor: pointer;
+            transition: var(--transition); text-align: left; font-size: 1rem;
         }
-        .option-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); transform: scale(1.02) translateX(8px); }
-        .option-btn.correct { background: var(--correct) !important; color: #000; font-weight: 800; border-color: var(--correct); box-shadow: 0 0 30px rgba(0, 255, 178, 0.4); }
-        .option-btn.wrong { background: var(--wrong) !important; color: #fff; border-color: var(--wrong); box-shadow: 0 0 30px rgba(255, 59, 59, 0.4); }
-        .explanation { margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.4); border-radius: 20px; display: none; text-align: center; font-size: 1rem; border-top: 2px solid var(--accent); animation: fadeIn 0.5s ease; }
-        .result-card { display: none; flex-direction: column; align-items: center; }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); transform: translateX(8px); }
+        .option-btn.correct { background: var(--correct) !important; color: #000; font-weight: 800; }
+        .option-btn.wrong { background: var(--wrong) !important; color: #fff; }
+        .explanation { margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.4); border-radius: 20px; display: none; animation: fadeIn 0.5s ease; }
+
+        /* LEADERBOARD */
+        .leaderboard-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); width: 100%; }
+        .rank { font-weight: 800; color: var(--accent); margin-right: 15px; }
+
+        /* LOCK & RESULTS */
         .score-circle { width: 120px; height: 120px; border-radius: 50%; border: 5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0; box-shadow: 0 0 30px var(--accent-glow); }
-        .lock-card { display: none; flex-direction: column; align-items: center; }
-        .lock-icon { font-size: 5rem; margin-bottom: 1rem; }
-        .timer { font-size: 3.5rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-main); margin: 1.5rem 0; text-shadow: 0 0 20px var(--accent-glow); }
+        .timer { font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 1.5rem 0; }
+
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
@@ -70,68 +100,117 @@
     </div>
 
     <header>
-        <h1>ViralQuiz MULTIVERSE</h1>
-        <p>F1 • Motors • Streamers • Memes • Logic</p>
+        <h1>Quizly</h1>
+        <p>The Ultimate Mind Challenge</p>
     </header>
 
     <div class="container">
-        <div class="quiz-card" id="quiz-card">
+        <!-- LANDING PAGE -->
+        <div class="card" id="landing-page" style="display: flex;">
+            <h2>Benvenuto in Quizly 🧠</h2>
+            <p style="color: var(--text-dim)">Metti alla prova la tua intelligenza e scala la classifica.</p>
+            <div class="input-group">
+                <input type="text" id="nickname" class="nickname-input" placeholder="Inserisci il tuo Nickname...">
+            </div>
+            <div class="rules">
+                <strong>📜 Regole del gioco:</strong>
+                <ul>
+                    <li>Hai 10 domande ogni 24 ore.</li>
+                    <li>Le categorie variano: F1, Meme, Streamer, Logica.</li>
+                    <li>Più risposte corrette = Rank più alto.</li>
+                    <li>Se finisci i turni, dovrai attendere il cooldown.</li>
+                </ul>
+            </div>
+            <button class="btn-primary" onclick="startQuiz()">Inizia Sfida 🚀</button>
+        </div>
+
+        <!-- QUIZ CARD -->
+        <div class="card" id="quiz-card">
             <div class="progress-wrapper"><div class="progress-fill" id="progress-fill"></div></div>
-            <div class="question" id="question">Sincronizzazione neuroni...</div>
+            <div class="question" id="question">Caricamento...</div>
             <div class="options-grid" id="options-grid"></div>
             <div class="explanation" id="explanation"><span id="expl-text"></span></div>
         </div>
 
-        <div class="result-card" id="result-card">
-            <h2>Sessione Completata</h2>
-            <div class="score-circle" id="final-score">0/5</div>
-            <h3 id="rank-text">Analisi in corso...</h3>
-            <p style="color: var(--text-dim)">I tuoi dati sono stati aggiornati.</p>
+        <!-- RESULTS CARD -->
+        <div class="card" id="result-card">
+            <h2>Sessione Terminata!</h2>
+            <div class="score-circle" id="final-score">0/10</div>
+            <h3 id="rank-text">Analisi...</h3>
+            <div id="leaderboard-area" style="width: 100%; margin-top: 2rem;">
+                <p style="color: var(--text-dim)">🏆 Classifica Locale</p>
+                <div id="leaderboard-list"></div>
+            </div>
+            <div id="share-area"></div>
+            <p style="font-size: 0.8rem; margin-top: 1rem; color: var(--text-dim)">Il sistema entrerà ora in cooldown.</p>
         </div>
 
-        <div class="lock-card" id="lock-card">
-            <div class="lock-icon">🔐</div>
+        <!-- LOCK CARD -->
+        <div class="card" id="lock-card">
+            <div class="lock-icon" style="font-size: 4rem;">🔐</div>
             <h2>Cooldown Attivo</h2>
-            <p style="color: var(--text-dim)">Il sistema è in fase di ricarica.</p>
+            <p style="color: var(--text-dim)">Il tuo cervello ha bisogno di riposo.</p>
             <div class="timer" id="timer">00:00:00</div>
-            <p style="font-weight: 300">Ritorna tra 24 ore per nuovi stimoli.</p>
+            <p style="font-weight: 300">Ritorna domani per nuovi quiz!</p>
         </div>
     </div>
 
-    <div class="footer">Neural Interface v5.0 • Multiverse Edition</div>
+    <div class="footer">Neural Interface v6.0 • Quizly Experience</div>
 
     <script>
-        // DATABASE ESPANSO CON TUTTE LE CATEGORIE
-        // diff: 1=Easy, 2=Medium, 3=Hard
+        // DATABASE COMPLETO E AGGIORNATO
         let quizData = [
             // --- LOGICA ---
-            { id: 1, q: "Più ne togli, più diventa grande. Cos'è?", o: ["Il debito", "Un buco", "La fame", "Il silenzio"], a: 1, e: "Se non l'hai capito, forse hai un 'buco' di memoria!", diff: 1, type: 'logica' },
-            { id: 3, q: "Padre di quest'uomo è il figlio di mio padre. Chi è?", o: ["Lui stesso", "Suo padre", "Suo figlio", "Suo nonno"], a: 2, e: "L'enigma è più semplice della tua dichiarazione dei redditi.", diff: 2, type: 'logica' },
-            
-            // --- F1 & MOTORI ---
-            { id: 101, q: "Chi detiene il record di campionati mondiali in F1 (insieme a Schumacher)?", o: ["Lewis Hamilton", "Max Verstappen", "Fernando Alonso", "Sebastian Vettel"], a: 0, e: "Sir Lewis Hamilton, una leggenda assoluta.", diff: 1, type: 'motors' },
-            { id: 102, q: "Quale scuderia di F1 è famosa per il colore rosso?", o: ["Mercedes", "Red Bull", "Ferrari", "McLaren"], a: 2, e: "Il Rosso Corsa è un simbolo di passione italiana!", diff: 1, type: 'motors' },
-            { id: 103, q: "Cos'è il DRS in Formula 1?", o: ["Un sistema di frenata", "Un'ala mobile per sorpassare", "Un sensore di pioggia", "Il nome del motore"], a: 1, e: "Drag Reduction System: serve a ridurre la resistenza all'aria.", diff: 2, type: 'motors' },
-            { id: 104, q: "In che città si corre il Gran Premio di Monaco?", o: ["Monaco", "Monte Carlo", "Nizza", "Cannes"], a: 1, e: "Si corre per le strade di Monte Carlo!", diff: 1, type: 'motors' },
-            { id: 105, q: "Cosa significa 'Downforce' in aerodinamica?", o: ["Aumentare la velocità", "Schiacciare la macchina a terra", "Far volare l'auto", "Raffreddare il motore"], a: 1, e: "Più downforce = più aderenza in curva!", diff: 2, type: 'motors' },
-
-            // --- STREAMER & YOUTUBER ---
-            { id: 201, q: "Chi è considerato lo YouTuber più seguito al mondo attualmente?", o: ["PewDiePie", "MrBeast", "T-Series", "Casey Neistat"], a: 1, e: "MrBeast ha rivoluzionato il modo di fare contenuti!", diff: 1, type: 'web' },
-            { id: 202, q: "Qual è la piattaforma principale per lo streaming di videogiochi?", o: ["Facebook", "TikTok", "Twitch", "Instagram"], a: 2, e: "Senza Twitch, il mondo degli streamer non sarebbe lo stesso.", diff: 1, type: 'web' },
-            { id: 203, q: "Chi è famoso per i suoi video di 'Challenge' estreme e filantropia?", o: ["Logan Paul", "MrBeast", "Slogo",, "Sidemen"], a: 1, e: "Regala case e isole, è MrBeast!", diff: 1, type: 'web' },
-            { id: 204, q: "Quale di questi è un termine tipico del gaming/streaming?", o: ["Laggare", "Sincronizzare", "Compilare", "Navigare"], a: 0, e: "Laggare è l'incubo di ogni gamer!", diff: 1, type: 'web' },
-
-            // --- MEME DEL WEB ---
-            { id: 301, q: "Qual è il cane di razza Shiba Inu protagonista di uno dei meme più famosi?", o: ["Pug", "Doge", "Husky", "Golden"], a: 1, e: "Much wow! Doge è immortale.", diff: 1, type: 'meme' },
-            { id: 302, q: "Qual è il tormentone associato a Cristiano Ronaldo?", o: ["Let's Go!", "Siuuu!", "Wow!", "Boom!"], a: 1, e: "Il SIUUU ha fatto il giro del pianeta.", diff: 1, type: 'meme' },
-            { id: 303, q: "Cos'è un 'Rickroll'?", o: ["Un ballo di TikTok", "Un link ingannoso a una canzone di Rick Astley", "Un gioco di ruolo", "Un bug di Windows"], a: 1, e: "Sei appena stato Rickrollato (quasi)!", diff: 2, type: 'meme' },
-            { id: 304, q: "Quale meme rappresenta una faccia confusa o imbarazzata con una mano sul mento?", o: ["Trollface", "Thinking Face", "Woman Yelling at Cat", "Hide the Pain Harold"], a: 1, e: "Tutti lo usiamo quando non capiamo nulla.", diff: 1, type: 'meme' },
+            { id: 1, q: "Più ne togli, più diventa grande. Cos'è?", o: ["Il debito", "Un buco", "La fame", "Il silenzio"], a: 1, e: "Un classico: più scavi, più il buco cresce!", type: 'logica' },
+            { id: 2, q: "Quale parola di 5 lettere diventa più corta se aggiungi due lettere?", o: ["Breve", "Piccolo", "Nano", "Corto"], a: 3, e: "Corto + 'issimo' = Cortissimo!", type: 'logica' },
+            { id: 3, q: "Cosa sale ma non scende mai?", o: ["Il prezzo della benzina", "L'età", "Un palloncino", "La temperatura"], a: 1, e: "Purtroppo l'età non torna indietro!", type: 'logica' },
+            { id: 4, q: "Se un treno elettrico va a Nord, in che direzione va il fumo?", o: ["Sud", "Nord", "Est", "Non c'è fumo"], a: 3, e: "I treni elettrici non emettono fumo!", type: 'logica' },
+            { id: 5, q: "Cosa ha una città ma non case, montagne ma non alberi, acqua ma non pesci?", o: ["Un sogno", "Una mappa", "Un libro", "Un miraggio"], a: 1, e: "Semplice: è una mappa!", type: 'logica' },
+            { id: 6, q: "Cosa appartiene a te, ma gli altri lo usano molto più di te?", o: ["Il telefono", "Il tuo nome", "I tuoi soldi", "La tua password"], a: 1, e: "Il tuo nome è usato da tutti tranne che da te!", type: 'logica' },
+            { id: 7, q: "Qual è l'unico numero che, scritto in lettere, ha lo stesso numero di lettere del valore?", o: ["Due", "Tre", "Quattro", "Cinque"], a: 1, e: "T-R-E = 3 lettere!", type: 'logica' },
+            { id: 8, q: "Se ieri fosse domani, oggi sarebbe venerdì. Che giorno è oggi?", o: ["Mercoledì", "Giovedì", "Sabato", "Domenica"], a: 0, e: "Riflettici: se ieri fosse domani, oggi sarebbe venerdì. Quindi oggi è mercoledì!", type: 'logica' },
+            { id: 9, q: "Più è calda, più è fresca. Cos'è?", o: ["La pizza", "La pioggia", "La torta", "La brezza"], a: 2, e: "Si dice 'torta fresca di forno'!", type: 'logica' },
+            { id: 10, q: "Cosa puoi rompere senza nemmeno toccarlo?", o: ["Una promessa", "Il silenzio", "Il cuore", "Tutte le precedenti"], a: 3, e: "Tutte e tre sono risposte corrette!", type: 'logica' },
+            // --- MOTORI ---
+            { id: 101, q: "Chi ha vinto più campionati mondiali di F1 (insieme a Schumacher)?", o: ["Lewis Hamilton", "Max Verstappen", "Fernando Alonso", "Sebastian Vettel"], a: 0, e: "Sir Lewis Hamilton con 7 titoli!", type: 'motors' },
+            { id: 102, q: "Cos'è il DRS in Formula 1?", o: ["Un sistema di frenata", "Un'ala mobile per sorpassare", "Un sensore di pioggia", "Il nome del motore"], a: 1, e: "Senza DRS i sorpassi sarebbero molto più difficili!", type: 'motors' },
+            { id: 103, q: "In quale città si corre il Gran Premio di Monaco?", o: ["Monaco", "Monte Carlo", "Nizza", "Cannes"], a: 1, e: "Monte Carlo è il cuore del GP di Monaco!", type: 'motors' },
+            { id: 104, q: "Qual è il colore ufficiale della Scuderia Ferrari?", o: ["Giallo", "Rosso", "Bianco", "Blu"], a: 1, e: "Il Rosso Corsa è leggendario!", type: 'motors' },
+            { id: 105, q: "Chi è il pilota soprannominato 'Il Mad Max'?", o: ["Max Verstappen", "Max Chilton", "Max Chilton", "Max Verstappen"], a: 0, e: "Max Verstappen, l'attuale dominante della F1!", type: 'motors' },
+            { id: 106, q: "Cos'è la 'Downforce' in aerodinamica?", o: ["Aumentare la velocità", "Schiacciare l'auto a terra", "Far volare l'auto", "Raffreddare il motore"], a: 1, e: "Più downforce = più aderenza in curva!", type: 'motors' },
+            { id: 107, q: "Quale scuderia usa il colore papaya?", o: ["Mercedes", "Red Bull", "McLaren", "Williams"], a: 2, e: "La McLaren è famosa per il suo arancione papaya!", type: 'motors' },
+            { id: 108, q: "Cosa indica la 'bandiera a scacchi'?", o: ["Pericolo", "Pioggia", "Fine della gara", "Riavvio"], a: 2, e: "Il momento più emozionante: la vittoria!", type: 'motors' },
+            { id: 109, q: "Chi è stato il primo campione del mondo di F1?", o: ["Juan Manuel Fangio", "Enzo Ferrari", "Ayrton Senna", "Niki Lauda"], a: 0, e: "Fangio è stato il primo grande maestro.", type: 'motors' },
+            { id: 110, q: "Qual è la funzione dei 'pit stop'?", o: ["Dormire", "Cambiare gomme e fare rifornimento", "Lavare l'auto", "Cambiare pilota"], a: 1, e: "Secondi preziosi che possono decidere la gara!", type: 'motors' },
+            // --- WEB/CREATOR ---
+            { id: 201, q: "Chi è l'attuale YouTuber più seguito al mondo?", o: ["PewDiePie", "MrBeast", "T-Series", "Logan Paul"], a: 1, e: "MrBeast ha superato tutti con i suoi contenuti folli!", type: 'web' },
+            { id: 202, q: "Qual è la piattaforma principale per lo streaming live?", o: ["Facebook", "TikTok", "Twitch", "Instagram"], a: 2, e: "Twitch è il regno degli streamer!", type: 'web' },
+            { id: 203, q: "Quale di questi termini indica un ritardo nella connessione?", o: ["Buffer", "Ping", "Lag", "Download"], a: 2, e: "Laggare è l'incubo di ogni gamer!", type: 'web' },
+            { id: 204, q: "Chi è famoso per le 'Challenge' estreme e regalare milioni?", o: ["MrBeast", "PewDiePie", "Casey Neistat", "Slogo"], a: 0, e: "MrBeast regala case, isole e milioni di dollari!", type: 'web' },
+            { id: 401, q: "Chi è il leader degli 'Stalloni' e il re indiscusso di Twitch Italia?", o: ["Il Rosso", "Blur", "Marza", "Manuuxo"], a: 1, e: "Blur e i suoi Stalloni dominano la piattaforma!", type: 'web' },
+            { id: 402, q: "Chi è famoso per le sessioni di Fortnite +18 e per il suo stile assolutamente senza filtri?", o: ["Manuuxo", "Mollu", "TheRealMarza", "Blur"], a: 2, e: "Il Maestro è noto per il caos e l'energia estrema!", type: 'web' },
+            { id: 403, q: "Quale di questi creator è un vero 'Variety' che spazia tra contenuti di ogni tipo?", o: ["Manuuxo", "Mollu", "Slogo", "Sidemen"], a: 0, e: "Manuuxo non si ferma a un solo genere: è un creator variety!", type: 'web' },
+            { id: 404, q: "Chi tra questi è considerato della 'vecchia guardia' del web, insieme al Maestro?", o: ["Sdrum", "Mollu", "Mister Pella", "Un creator nuovo"], a: 1, e: "Mollu è un veterano, un pilastro della vecchia scuola!", type: 'web' },
+            { id: 405, q: "Se senti parlare di 'Stalloni', a quale streamer ti riferisci?", o: ["Marza", "Manuuxo", "Blur", "Il Rosso"], a: 2, e: "Sempre e solo Blur!", type: 'web' },
+            { id: 406, q: "Qual è la caratteristica principale dei contenuti di TheRealMarza?", o: ["Sempre educato", "Contenuti per bambini", "Caos, urla e zero filtri", "Tutorial di cucina"], a: 2, e: "Il Maestro non conosce la parola 'moderazione'!", type: 'web' },
+            // --- MEME ---
+            { id: 301, q: "Qual è il cane Shiba Inu protagonista di un meme leggendario?", o: ["Pug", "Doge", "Husky", "Golden"], a: 1, e: "Much wow! Doge è immortale.", type: 'meme' },
+            { id: 302, q: "Qual è il tormentone di Cristiano Ronaldo?", o: ["Let's Go!", "Siuuu!", "Wow!", "Boom!"], a: 1, e: "Il SIUUU ha fatto il giro del mondo!", type: 'meme' },
+            { id: 303, q: "Cos'è un 'Rickroll'?", o: ["Un ballo", "Un link ingannoso a Rick Astley", "Un gioco", "Un bug"], a: 1, e: "Sei stato Rickrollato! Never gonna give you up!", type: 'meme' },
+            { id: 304, q: "Quale meme rappresenta una faccia confusa con la mano sul mento?", o: ["Trollface", "Thinking Face", "Woman Yelling at Cat", "Harold"], a: 1, e: "Lo usiamo tutti quando non capiamo nulla!", type: 'meme' },
+            { id: 305, q: "Qual è il meme del gatto che siede a tavola mentre una donna urla?", o: ["Grumpy Cat", "Woman Yelling at a Cat", "Nyan Cat", "Smudge the Cat"], a: 1, e: "Smudge il gatto non ha capito perché lei urlasse!", type: 'meme' },
+            { id: 306, q: "Chi è il protagonista del meme 'Hide the Pain Harold'?", o: ["Un gatto", "Un signore con un sorriso sofferto", "Un cane", "Un youtuber"], a: 1, e: "Harold è l'icona della sofferenza nascosta!", type: 'meme' },
+            { id: 307, q: "Cosa significa 'Ratio' su Twitter/X?", o: ["Rapporto di velocità", "Quando una risposta ha più like del post originale", "Un tipo di hashtag", "Un errore di sistema"], a: 1, e: "Se vieni 'ratioed', significa che hai scritto una sciocchezza!", type: 'meme' },
+            { id: 308, q: "Qual è l'animazione infinita di un gatto che vola su un arcobaleno?", o: ["Nyan Cat", "Grumpy Cat", "Keyboard Cat", "Pop Cat"], a: 0, e: "Nyan Cat è un classico di internet!", type: 'meme' },
+            { id: 309, q: "Cosa rappresenta il meme 'This is Fine'?", o: ["Un cane in una stanza in fiamme", "Un gatto che dorme", "Un uomo che ride", "Un computer rotto"], a: 0, e: "L'accettazione totale del caos!", type: 'meme' },
+            { id: 310, q: "Quale di questi è un meme basato su un suono di TikTok?", o: ["Oh No", "Siuuu", "Rickroll", "Doge"], a: 0, e: "Quel suono 'Oh no' che anticipa un disastro!", type: 'meme' },
         ];
 
         let attempts = 0;
         let score = 0;
         let lastFinishTime = 0;
-        let seenQuizzes = JSON.parse(localStorage.getItem('mv_seen_quizzes')) || [];
+        let currentNickname = "";
+        let seenQuizzes = JSON.parse(localStorage.getItem('qzly_seen')) || [];
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
@@ -150,57 +229,52 @@
             }
         }
 
-        async function init() {
-            attempts = parseInt(localStorage.getItem('mv_attempts')) || 0;
-            lastFinishTime = parseInt(localStorage.getItem('mv_finish_time')) || 0;
+        function init() {
+            attempts = parseInt(localStorage.getItem('qzly_attempts')) || 0;
+            lastFinishTime = parseInt(localStorage.getItem('qzly_finish_time')) || 0;
+            currentNickname = localStorage.getItem('qzly_nickname') || "";
+            if (currentNickname) { checkLock(); } else { showScreen('landing-page'); }
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.card').forEach(c => c.style.display = 'none');
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function startQuiz() {
+            const nick = document.getElementById('nickname').value.trim();
+            if (!nick) { alert("Per favore, inserisci un nickname!"); return; }
+            currentNickname = nick;
+            localStorage.setItem('qzly_nickname', nick);
             checkLock();
         }
 
         function checkLock() {
             const now = Date.now();
-            if (attempts >= 5) {
+            if (attempts >= 10) {
                 if (now - lastFinishTime < 24 * 60 * 60 * 1000) {
-                    showLockScreen(); startTimer(); return;
+                    showScreen('lock-card'); startTimer(); return;
                 } else {
-                    attempts = 0; localStorage.setItem('mv_attempts', 0);
+                    attempts = 0; localStorage.setItem('qzly_attempts', 0);
                 }
             }
             showQuiz();
         }
 
-        function showLockScreen() {
-            document.getElementById('quiz-card').style.display = 'none';
-            document.getElementById('result-card').style.display = 'none';
-            document.getElementById('lock-card').style.display = 'flex';
-        }
-
         function showQuiz() {
-            document.getElementById('quiz-card').style.display = 'block';
-            document.getElementById('lock-card').style.display = 'none';
-            document.getElementById('result-card').style.display = 'none';
+            showScreen('quiz-card');
             loadQuiz();
         }
 
         function loadQuiz() {
-            let availableQuizzes = quizData.filter(q => !seenQuizzes.includes(q.id));
-            if (availableQuizzes.length < 5) {
-                seenQuizzes = [];
-                localStorage.setItem('mv_seen_quizzes', JSON.stringify([]));
-                availableQuizzes = quizData;
-            }
+            let available = quizData.filter(q => !seenQuizzes.includes(q.id));
+            if (available.length < 10) { seenQuizzes = []; localStorage.setItem('qzly_seen', JSON.stringify([])); available = quizData; }
 
-            // BILANCIAMENTO VIA DI MEZZO
-            // Invece di aumentare la difficoltà, peschiamo a caso tra tutte le difficoltà
-            // per garantire un mix equilibrato in ogni sessione.
-            const quiz = availableQuizzes[Math.floor(Math.random() * availableQuizzes.length)];
-
-            const accentColor = (quiz.type === 'logica') ? '#FF007A' : 
-                   (quiz.type === 'motors') ? '#00D1FF' : 
-                   (quiz.type === 'web') ? '#8A2BE2' : '#FFFF00';
-
+            const quiz = available[Math.floor(Math.random() * available.length)];
+            const accentColor = (quiz.type === 'logica') ? '#FF007A' : (quiz.type === 'web') ? '#8A2BE2' : (quiz.type === 'motors') ? '#00D1FF' : '#FFFF00';
             
             document.documentElement.style.setProperty('--accent', accentColor);
-            document.getElementById('progress-fill').style.width = `${(attempts / 5) * 100}%`;
+            document.getElementById('progress-fill').style.width = `${(attempts / 10) * 100}%`;
             document.getElementById('question').innerText = quiz.q;
             document.getElementById('expl-text').innerText = quiz.e;
             
@@ -223,56 +297,76 @@
             buttons.forEach(b => b.disabled = true);
 
             if (selected === correct) {
-                btn.classList.add('correct');
-                score++;
-                playSound('correct');
+                btn.classList.add('correct'); score++; playSound('correct');
             } else {
-                btn.classList.add('wrong');
-                buttons[correct].classList.add('correct');
-                card.classList.add('shake');
-                setTimeout(() => card.classList.remove('shake'), 500);
+                btn.classList.add('wrong'); buttons[correct].classList.add('correct');
+                card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 500);
                 playSound('wrong');
             }
 
             document.getElementById('explanation').style.display = 'block';
             seenQuizzes.push(quizId);
-            localStorage.setItem('mv_seen_quizzes', JSON.stringify(seenQuizzes));
+            localStorage.setItem('qzly_seen', JSON.stringify(seenQuizzes));
 
             setTimeout(() => {
                 attempts++;
-                localStorage.setItem('mv_attempts', attempts);
-                if (attempts >= 5) {
-                    showResults();
-                } else {
+                localStorage.setItem('qzly_attempts', attempts);
+                if (attempts >= 10) { showResults(); } else {
                     card.classList.add('slide-out');
-                    setTimeout(() => {
-                        loadQuiz();
-                        card.classList.remove('slide-out');
-                        card.classList.add('slide-in');
-                        setTimeout(() => card.classList.remove('slide-in'), 400);
-                    }, 400);
+                    setTimeout(() => { loadQuiz(); card.classList.remove('slide-out'); }, 400);
                 }
             }, 5000); 
         }
 
         function showResults() {
-            localStorage.setItem('mv_finish_time', Date.now());
-            document.getElementById('quiz-card').style.display = 'none';
-            const resCard = document.getElementById('result-card');
-            resCard.style.display = 'flex';
-            document.getElementById('final-score').innerText = `${score}/5`;
-            let rank = score === 5 ? "LEGGENDA 👑" : (score >= 3 ? "ESPERTO 🧠" : "NOVICE 🐣");
+            localStorage.setItem('qzly_finish_time', Date.now());
+            showScreen('result-card');
+            document.getElementById('final-score').innerText = `${score}/10`;
+            
+            let rank = score === 10 ? "LEGGENDA 👑" : (score >= 7 ? "ESPERTO 🧠" : (score >= 4 ? "MEDIO 😐" : "NOVICE 🐣"));
             document.getElementById('rank-text').innerText = rank;
+
+            const shareArea = document.getElementById('share-area');
+            shareArea.innerHTML = '';
+            const shareMsg = `Ho appena fatto ${score}/10 su Quizly! 🧠 Sei più intelligente di me? Provalo qui: ${window.location.href}`;
+            const shareBtn = document.createElement('button');
+            shareBtn.innerText = "Condividi su WhatsApp 📱";
+            shareBtn.className = "btn-primary";
+            shareBtn.style.marginTop = "20px";
+            shareBtn.onclick = () => {
+                window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank');
+            };
+            shareArea.appendChild(shareBtn);
+
+            saveScore(currentNickname, score);
+            displayLeaderboard();
             confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
-            setTimeout(() => { showLockScreen(); startTimer(); }, 6000);
+            setTimeout(() => { showScreen('lock-card'); startTimer(); }, 10000);
+        }
+
+        function saveScore(name, score) {
+            let leaderboard = JSON.parse(localStorage.getItem('qzly_leaderboard')) || [];
+            leaderboard.push({ name, score, date: new Date().toLocaleDateString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 5);
+            localStorage.setItem('qzly_leaderboard', JSON.stringify(leaderboard));
+        }
+
+        function displayLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('qzly_leaderboard')) || [];
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                list.innerHTML += `<div class="leaderboard-row"><span><span class="rank">#${index+1}</span> ${entry.name}</span><span style="font-weight: 800">${entry.score}/10</span></div>`;
+            });
         }
 
         function startTimer() {
             setInterval(() => {
                 const now = Date.now();
-                const finishTime = parseInt(localStorage.getItem('mv_finish_time'));
+                const finishTime = parseInt(localStorage.getItem('qzly_finish_time'));
                 const diff = (finishTime + (24 * 60 * 60 * 1000)) - now;
-                if (diff <= 0) { localStorage.setItem('mv_attempts', 0); location.reload(); }
+                if (diff <= 0) { localStorage.setItem('qzly_attempts', 0); location.reload(); }
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const secs = Math.floor((diff % (1000 * 60)) / 1000);
