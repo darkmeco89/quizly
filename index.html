@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViralQuiz INFINITE | Multiverse Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        /* DESIGN PREMIUM (Mantenuto dal God Mode v4) */
+        :root {
+            --accent: #8A2BE2; --accent-glow: rgba(138, 43, 226, 0.5);
+            --secondary: #FF007A; --bg-dark: #080810;
+            --card-bg: rgba(255, 255, 255, 0.07); --text-main: #FFFFFF;
+            --text-dim: #A0A0A0; --correct: #00FFB2; --wrong: #FF3B3B;
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Outfit', sans-serif; background-color: var(--bg-dark);
+            color: var(--text-main); margin: 0; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; overflow: hidden;
+        }
+        .bg-blobs { position: absolute; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(80px); }
+        .blob { position: absolute; border-radius: 50%; opacity: 0.4; animation: move 20s infinite alternate; }
+        .blob-1 { width: 400px; height: 400px; background: var(--accent); top: -10%; left: -10%; }
+        .blob-2 { width: 300px; height: 300px; background: var(--secondary); bottom: -5%; right: -5%; animation-delay: -5s; }
+        .blob-3 { width: 250px; height: 250px; background: #00D1FF; top: 40%; left: 30%; animation-delay: -10s; }
+        @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(100px, 100px) scale(1.2); } }
+        header { text-align: center; margin-bottom: 2rem; z-index: 10; animation: fadeInDown 0.8s ease; }
+        header h1 { font-size: 3.5rem; font-weight: 800; margin: 0; background: linear-gradient(to bottom, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
+        .container { width: 100%; max-width: 500px; padding: 20px; z-index: 10; }
+        .quiz-card, .lock-card, .result-card {
+            background: var(--card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 35px; padding: 2.5rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6); text-align: center; transition: var(--transition); position: relative;
+        }
+        .slide-out { transform: translateX(-100px); opacity: 0; }
+        .slide-in { transform: translateX(0); opacity: 1; }
+        .progress-wrapper { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 2.5rem; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--accent), var(--secondary)); box-shadow: 0 0 15px var(--accent); transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
+        .question { font-size: 1.6rem; font-weight: 600; margin-bottom: 2rem; line-height: 1.3; min-height: 90px; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px 22px; border-radius: 20px; color: var(--text-main); font-size: 1.05rem;
+            font-family: inherit; cursor: pointer; transition: var(--transition); text-align: left;
+        }
+        .option-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--accent); transform: scale(1.02) translateX(8px); }
+        .option-btn.correct { background: var(--correct) !important; color: #000; font-weight: 800; border-color: var(--correct); box-shadow: 0 0 30px rgba(0, 255, 178, 0.4); }
+        .option-btn.wrong { background: var(--wrong) !important; color: #fff; border-color: var(--wrong); box-shadow: 0 0 30px rgba(255, 59, 59, 0.4); }
+        .explanation { margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.4); border-radius: 20px; display: none; text-align: center; font-size: 1rem; border-top: 2px solid var(--accent); animation: fadeIn 0.5s ease; }
+        .result-card { display: none; flex-direction: column; align-items: center; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; border: 5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; margin: 1.5rem 0; box-shadow: 0 0 30px var(--accent-glow); }
+        .lock-card { display: none; flex-direction: column; align-items: center; }
+        .lock-icon { font-size: 5rem; margin-bottom: 1rem; }
+        .timer { font-size: 3.5rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-main); margin: 1.5rem 0; text-shadow: 0 0 20px var(--accent-glow); }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .shake { animation: shake 0.2s ease-in-out 0s 2; }
+        .footer { margin-top: 3rem; color: var(--text-dim); font-size: 0.7rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 3px; }
+    </style>
+</head>
+<body onload="init()">
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+    </div>
+
+    <header>
+        <h1>ViralQuiz MULTIVERSE</h1>
+        <p>F1 • Motors • Streamers • Memes • Logic</p>
+    </header>
+
+    <div class="container">
+        <div class="quiz-card" id="quiz-card">
+            <div class="progress-wrapper"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="question" id="question">Sincronizzazione neuroni...</div>
+            <div class="options-grid" id="options-grid"></div>
+            <div class="explanation" id="explanation"><span id="expl-text"></span></div>
+        </div>
+
+        <div class="result-card" id="result-card">
+            <h2>Sessione Completata</h2>
+            <div class="score-circle" id="final-score">0/5</div>
+            <h3 id="rank-text">Analisi in corso...</h3>
+            <p style="color: var(--text-dim)">I tuoi dati sono stati aggiornati.</p>
+        </div>
+
+        <div class="lock-card" id="lock-card">
+            <div class="lock-icon">🔐</div>
+            <h2>Cooldown Attivo</h2>
+            <p style="color: var(--text-dim)">Il sistema è in fase di ricarica.</p>
+            <div class="timer" id="timer">00:00:00</div>
+            <p style="font-weight: 300">Ritorna tra 24 ore per nuovi stimoli.</p>
+        </div>
+    </div>
+
+    <div class="footer">Neural Interface v5.0 • Multiverse Edition</div>
+
+    <script>
+        // DATABASE ESPANSO CON TUTTE LE CATEGORIE
+        // diff: 1=Easy, 2=Medium, 3=Hard
+        let quizData = [
+            // --- LOGICA ---
+            { id: 1, q: "Più ne togli, più diventa grande. Cos'è?", o: ["Il debito", "Un buco", "La fame", "Il silenzio"], a: 1, e: "Se non l'hai capito, forse hai un 'buco' di memoria!", diff: 1, type: 'logica' },
+            { id: 3, q: "Padre di quest'uomo è il figlio di mio padre. Chi è?", o: ["Lui stesso", "Suo padre", "Suo figlio", "Suo nonno"], a: 2, e: "L'enigma è più semplice della tua dichiarazione dei redditi.", diff: 2, type: 'logica' },
+            
+            // --- F1 & MOTORI ---
+            { id: 101, q: "Chi detiene il record di campionati mondiali in F1 (insieme a Schumacher)?", o: ["Lewis Hamilton", "Max Verstappen", "Fernando Alonso", "Sebastian Vettel"], a: 0, e: "Sir Lewis Hamilton, una leggenda assoluta.", diff: 1, type: 'motors' },
+            { id: 102, q: "Quale scuderia di F1 è famosa per il colore rosso?", o: ["Mercedes", "Red Bull", "Ferrari", "McLaren"], a: 2, e: "Il Rosso Corsa è un simbolo di passione italiana!", diff: 1, type: 'motors' },
+            { id: 103, q: "Cos'è il DRS in Formula 1?", o: ["Un sistema di frenata", "Un'ala mobile per sorpassare", "Un sensore di pioggia", "Il nome del motore"], a: 1, e: "Drag Reduction System: serve a ridurre la resistenza all'aria.", diff: 2, type: 'motors' },
+            { id: 104, q: "In che città si corre il Gran Premio di Monaco?", o: ["Monaco", "Monte Carlo", "Nizza", "Cannes"], a: 1, e: "Si corre per le strade di Monte Carlo!", diff: 1, type: 'motors' },
+            { id: 105, q: "Cosa significa 'Downforce' in aerodinamica?", o: ["Aumentare la velocità", "Schiacciare la macchina a terra", "Far volare l'auto", "Raffreddare il motore"], a: 1, e: "Più downforce = più aderenza in curva!", diff: 2, type: 'motors' },
+
+            // --- STREAMER & YOUTUBER ---
+            { id: 201, q: "Chi è considerato lo YouTuber più seguito al mondo attualmente?", o: ["PewDiePie", "MrBeast", "T-Series", "Casey Neistat"], a: 1, e: "MrBeast ha rivoluzionato il modo di fare contenuti!", diff: 1, type: 'web' },
+            { id: 202, q: "Qual è la piattaforma principale per lo streaming di videogiochi?", o: ["Facebook", "TikTok", "Twitch", "Instagram"], a: 2, e: "Senza Twitch, il mondo degli streamer non sarebbe lo stesso.", diff: 1, type: 'web' },
+            { id: 203, q: "Chi è famoso per i suoi video di 'Challenge' estreme e filantropia?", o: ["Logan Paul", "MrBeast", "Slogo",, "Sidemen"], a: 1, e: "Regala case e isole, è MrBeast!", diff: 1, type: 'web' },
+            { id: 204, q: "Quale di questi è un termine tipico del gaming/streaming?", o: ["Laggare", "Sincronizzare", "Compilare", "Navigare"], a: 0, e: "Laggare è l'incubo di ogni gamer!", diff: 1, type: 'web' },
+
+            // --- MEME DEL WEB ---
+            { id: 301, q: "Qual è il cane di razza Shiba Inu protagonista di uno dei meme più famosi?", o: ["Pug", "Doge", "Husky", "Golden"], a: 1, e: "Much wow! Doge è immortale.", diff: 1, type: 'meme' },
+            { id: 302, q: "Qual è il tormentone associato a Cristiano Ronaldo?", o: ["Let's Go!", "Siuuu!", "Wow!", "Boom!"], a: 1, e: "Il SIUUU ha fatto il giro del pianeta.", diff: 1, type: 'meme' },
+            { id: 303, q: "Cos'è un 'Rickroll'?", o: ["Un ballo di TikTok", "Un link ingannoso a una canzone di Rick Astley", "Un gioco di ruolo", "Un bug di Windows"], a: 1, e: "Sei appena stato Rickrollato (quasi)!", diff: 2, type: 'meme' },
+            { id: 304, q: "Quale meme rappresenta una faccia confusa o imbarazzata con una mano sul mento?", o: ["Trollface", "Thinking Face", "Woman Yelling at Cat", "Hide the Pain Harold"], a: 1, e: "Tutti lo usiamo quando non capiamo nulla.", diff: 1, type: 'meme' },
+        ];
+
+        let attempts = 0;
+        let score = 0;
+        let lastFinishTime = 0;
+        let seenQuizzes = JSON.parse(localStorage.getItem('mv_seen_quizzes')) || [];
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'correct') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        async function init() {
+            attempts = parseInt(localStorage.getItem('mv_attempts')) || 0;
+            lastFinishTime = parseInt(localStorage.getItem('mv_finish_time')) || 0;
+            checkLock();
+        }
+
+        function checkLock() {
+            const now = Date.now();
+            if (attempts >= 5) {
+                if (now - lastFinishTime < 24 * 60 * 60 * 1000) {
+                    showLockScreen(); startTimer(); return;
+                } else {
+                    attempts = 0; localStorage.setItem('mv_attempts', 0);
+                }
+            }
+            showQuiz();
+        }
+
+        function showLockScreen() {
+            document.getElementById('quiz-card').style.display = 'none';
+            document.getElementById('result-card').style.display = 'none';
+            document.getElementById('lock-card').style.display = 'flex';
+        }
+
+        function showQuiz() {
+            document.getElementById('quiz-card').style.display = 'block';
+            document.getElementById('lock-card').style.display = 'none';
+            document.getElementById('result-card').style.display = 'none';
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            let availableQuizzes = quizData.filter(q => !seenQuizzes.includes(q.id));
+            if (availableQuizzes.length < 5) {
+                seenQuizzes = [];
+                localStorage.setItem('mv_seen_quizzes', JSON.stringify([]));
+                availableQuizzes = quizData;
+            }
+
+            // BILANCIAMENTO VIA DI MEZZO
+            // Invece di aumentare la difficoltà, peschiamo a caso tra tutte le difficoltà
+            // per garantire un mix equilibrato in ogni sessione.
+            const quiz = availableQuizzes[Math.floor(Math.random() * availableQuizzes.length)];
+
+            const accentColor = (quiz.type === 'logica') ? '#FF007A' : 
+                   (quiz.type === 'motors') ? '#00D1FF' : 
+                   (quiz.type === 'web') ? '#8A2BE2' : '#FFFF00';
+
+            
+            document.documentElement.style.setProperty('--accent', accentColor);
+            document.getElementById('progress-fill').style.width = `${(attempts / 5) * 100}%`;
+            document.getElementById('question').innerText = quiz.q;
+            document.getElementById('expl-text').innerText = quiz.e;
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            document.getElementById('explanation').style.display = 'none';
+
+            quiz.o.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(index, quiz.a, btn, quiz.id);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, correct, btn, quizId) {
+            const buttons = document.querySelectorAll('.option-btn');
+            const card = document.getElementById('quiz-card');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btn.classList.add('correct');
+                score++;
+                playSound('correct');
+            } else {
+                btn.classList.add('wrong');
+                buttons[correct].classList.add('correct');
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 500);
+                playSound('wrong');
+            }
+
+            document.getElementById('explanation').style.display = 'block';
+            seenQuizzes.push(quizId);
+            localStorage.setItem('mv_seen_quizzes', JSON.stringify(seenQuizzes));
+
+            setTimeout(() => {
+                attempts++;
+                localStorage.setItem('mv_attempts', attempts);
+                if (attempts >= 5) {
+                    showResults();
+                } else {
+                    card.classList.add('slide-out');
+                    setTimeout(() => {
+                        loadQuiz();
+                        card.classList.remove('slide-out');
+                        card.classList.add('slide-in');
+                        setTimeout(() => card.classList.remove('slide-in'), 400);
+                    }, 400);
+                }
+            }, 5000); 
+        }
+
+        function showResults() {
+            localStorage.setItem('mv_finish_time', Date.now());
+            document.getElementById('quiz-card').style.display = 'none';
+            const resCard = document.getElementById('result-card');
+            resCard.style.display = 'flex';
+            document.getElementById('final-score').innerText = `${score}/5`;
+            let rank = score === 5 ? "LEGGENDA 👑" : (score >= 3 ? "ESPERTO 🧠" : "NOVICE 🐣");
+            document.getElementById('rank-text').innerText = rank;
+            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
+            setTimeout(() => { showLockScreen(); startTimer(); }, 6000);
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                const now = Date.now();
+                const finishTime = parseInt(localStorage.getItem('mv_finish_time'));
+                const diff = (finishTime + (24 * 60 * 60 * 1000)) - now;
+                if (diff <= 0) { localStorage.setItem('mv_attempts', 0); location.reload(); }
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('timer').innerText = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
